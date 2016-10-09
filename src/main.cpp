@@ -27,11 +27,18 @@ State currentState = running;
 
 //Functions
 
-float getDialPosition(){
+int getDialPosition(){
 
-    //TODO: implement code to get dial position from 0.0 to 1.0
+    //TODO: implement code to get dial position from 0 to 60
 
-    return 1.0;
+    return 30;
+}
+
+int getDialPositionInHours(){
+
+    //TODO: implement code to get dial position from 0 to 24
+
+    return 12;
 }
 
 float getSeconds(int time){
@@ -69,20 +76,30 @@ float getHours(int time){
 // }
 
 
-// the setup function runs once when you press reset or power the board
+
 
 void setTime(State settingValue){
 
-    // TODO: Implement the time setting code with the potentiometer. the value of the dial should directly be parented to the potentiometer so that there is never a max limit on the time that the user can set.
+    int hoursToAdd = (int)(timeCounter / 3600);
+    int minutesToAdd = ((int)(timeCounter / 60)) % 60;
+    int secondsToAdd = timeCounter % 60;
 
     switch (settingValue) {
         case setHours : {
+            servo3.write((int)((float)getDialPositionInHours() * 7.5));
 
+            timeCounter = getDialPositionInHours() * (60*60) + minutesToAdd * (60) + secondsToAdd * (1);
         }
         case setMinutes : {
+            servo2.write(getDialPosition() * 3);
+
+            timeCounter = hoursToAdd * (60*60) + getDialPosition() * (60) + secondsToAdd * (1);
 
         }
         case setSeconds : {
+            servo1.write(getDialPosition() * 3);
+
+            timeCounter = hoursToAdd * (60*60) + minutesToAdd * (60) + getDialPosition() * (1);
 
         }
         default : {
@@ -111,7 +128,7 @@ void setup() {
     servo3.attach(servoPin3);
 }
 
-// the loop function runs over and over again forever
+
 void loop() {
 
     if (getButton()){
