@@ -5,19 +5,27 @@
  */
  #include <Servo.h>
  #include <Arduino.h>
+ #include <string.h>
 
 Servo servo1;
 Servo servo2;
 Servo servo3;
 
-static int button1 = 5;
 
-static int servoPin1 = 6;
-static int servoPin2 = 7;
-static int servoPin3 = 8;
+int buttonState = 0;
+const int buttonPin = 2;
+const int ledPin =  13;
 
-static float servoZeroPoint = 0.0;
-static float servoMaxPoint = 1.0;
+const int button1 = 2;
+
+const int servoPin1 = 6;
+const int servoPin2 = 7;
+const int servoPin3 = 8;
+
+const int dialPin1 = A0;
+
+const int servoZeroPoint = 0;
+const int servoMaxPoint = 1023;
 
 unsigned int timeCounter = 0;
 
@@ -25,20 +33,45 @@ enum State {running, setHours, setMinutes, setSeconds};
 
 State currentState = running;
 
+
+// create print() function because old habits die hard
+
+void print(char str[]){
+    Serial.println(str);
+}
+
 //Functions
+
+void printSerialTime(){
+
+    // int hoursToAdd = (int)(timeCounter / 3600);
+    // int minutesToAdd = ((int)(timeCounter / 60)) % 60;
+    // int secondsToAdd = timeCounter % 60;
+    //
+    // Serial.println(hoursToAdd << minutesToAdd << secondsToAdd);
+
+    Serial.println(timeCounter % 60);
+    Serial.println(((int)(timeCounter / 60)) % 60);
+    Serial.println((int)(timeCounter / 3600));
+    Serial.println("\n");
+}
 
 int getDialPosition(){
 
-    //TODO: implement code to get dial position from 0 to 60
+    int sensorValue = analogRead(dialPin1);
 
-    return 30;
+    float res = (static_cast<float>(sensorValue) * (60.0/1024.0)) + 0.5;
+
+    return static_cast<int>(res);
 }
 
 int getDialPositionInHours(){
 
-    //TODO: implement code to get dial position from 0 to 24
+    int sensorValue = analogRead(dialPin1);
 
-    return 12;
+    float res = (static_cast<float>(sensorValue) * (24.0/1024.0)) + 0.5;
+
+    return static_cast<int>(res);
 }
 
 float getSeconds(int time){
@@ -63,7 +96,7 @@ float getHours(int time){
     int hours = (int)(time / 3600);
 
 
-    return float(hours);
+    return float((float)hours * 2.5);
 
 }
 
@@ -78,41 +111,57 @@ float getHours(int time){
 
 
 
-void setTime(State settingValue){
+int setTime(){
 
     int hoursToAdd = (int)(timeCounter / 3600);
     int minutesToAdd = ((int)(timeCounter / 60)) % 60;
     int secondsToAdd = timeCounter % 60;
 
-    switch (settingValue) {
+    int newTimeCounter = timeCounter;
+
+    // Serial.println(settingValue);
+
+    switch (currentState) {
         case setHours : {
             servo3.write((int)((float)getDialPositionInHours() * 7.5));
 
             timeCounter = getDialPositionInHours() * (60*60) + minutesToAdd * (60) + secondsToAdd * (1);
+            break;
         }
         case setMinutes : {
             servo2.write(getDialPosition() * 3);
 
             timeCounter = hoursToAdd * (60*60) + getDialPosition() * (60) + secondsToAdd * (1);
-
+            break;
         }
         case setSeconds : {
             servo1.write(getDialPosition() * 3);
 
             timeCounter = hoursToAdd * (60*60) + minutesToAdd * (60) + getDialPosition() * (1);
-
+            break;
         }
         default : {
             break;
         }
     }
+
+    return newTimeCounter;
 }
 
 bool getButton(){
 
     // TODO: Add code for recognizing a button press. make sure to only receive one input for one press, and do not accept another input until the button is released.
 
-    return false;
+    buttonState = digitalRead(buttonPin);
+
+    if (buttonState == HIGH) {
+        Serial.println("BUTTON HIGH");
+        return true;
+    } else {
+        return false;
+    }
+
+
 }
 
 void doStep(int time){
@@ -126,29 +175,63 @@ void setup() {
     servo1.attach(servoPin1);
     servo2.attach(servoPin2);
     servo3.attach(servoPin3);
+    // initialize the pushbutton pin as an input:
+    pinMode(buttonPin, INPUT);
+
+    Serial.begin(9600);
 }
 
 
 void loop() {
 
+    // Serial.println(getDialPosition());
+    // Serial.println(getDialPositionInHours());
+    // delay(20);
+
+    // Serial.println(currentState);
+    // Serial.println(timeCounter);
+
+
     if (getButton()){
-        switch(currentState){
-            case running : currentState = setHours;
-            case setHours : currentState = setMinutes;
-            case setMinutes : currentState = setSeconds;
-            case setSeconds : currentState = running;
+
+
+
+        // currentState = setHours;
+
+        if(currentState == running){
+            currentState = setHours;
+        }else if(currentState == setHours){
+            currentState = setMinutes;
+        }else if(currentState == setMinutes){
+            currentState = setSeconds;
+        }else if(currentState == setSeconds){
+            currentState = running;
         }
+
+
+        Serial.println("newState:");
+        Serial.println(currentState);
+
+        // switch(currentState){
+        //     case running : currentState = setHours;
+        //     case setHours : currentState = setMinutes;
+        //     case setMinutes : currentState = setSeconds;
+        //     case setSeconds : currentState = running;
+        // }
     }
 
 
     if (currentState == running) {
         // servo1.write(0);
+        printSerialTime();
         doStep(timeCounter);
-        delay(200);
+        delay(300);
         timeCounter += 1;
     } else {
-        setTime(currentState);
+        // print("in not running state");
+        setTime();
     }
-    // servo1.write(0);
+
+    delay(200);
 
 }
