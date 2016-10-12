@@ -125,19 +125,19 @@ int setTime(){
         case setHours : {
             servo3.write((int)((float)getDialPositionInHours() * 7.5));
 
-            timeCounter = getDialPositionInHours() * (60*60) + minutesToAdd * (60) + secondsToAdd * (1);
+            newTimeCounter = getDialPositionInHours() * (60*60) + minutesToAdd * (60) + secondsToAdd * (1);
             break;
         }
         case setMinutes : {
             servo2.write(getDialPosition() * 3);
 
-            timeCounter = hoursToAdd * (60*60) + getDialPosition() * (60) + secondsToAdd * (1);
+            newTimeCounter = hoursToAdd * (60*60) + getDialPosition() * (60) + secondsToAdd * (1);
             break;
         }
         case setSeconds : {
             servo1.write(getDialPosition() * 3);
 
-            timeCounter = hoursToAdd * (60*60) + minutesToAdd * (60) + getDialPosition() * (1);
+            newTimeCounter = hoursToAdd * (60*60) + minutesToAdd * (60) + getDialPosition() * (1);
             break;
         }
         default : {
@@ -229,7 +229,7 @@ void loop() {
         timeCounter += 1;
     } else {
         // print("in not running state");
-        setTime();
+        timeCounter = setTime();
     }
 
     delay(200);
