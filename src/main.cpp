@@ -27,7 +27,7 @@ const int dialPin1 = A0;
 const int servoZeroPoint = 0;
 const int servoMaxPoint = 1023;
 
-unsigned int timeCounter = 0;
+unsigned long timeCounter = 0;
 
 enum State {running, setHours, setMinutes, setSeconds};
 
