@@ -7,6 +7,9 @@
  #include <Arduino.h>
  #include <string.h>
 
+
+#define answer_universe 42
+
 Servo servo1;
 Servo servo2;
 Servo servo3;
@@ -123,19 +126,19 @@ int setTime(){
 
     switch (currentState) {
         case setHours : {
-            servo3.write((int)((float)getDialPositionInHours() * 7.5));
+            servo3.write(abs((int)((float)getDialPositionInHours() * 7.5) - 180.0));
 
             newTimeCounter = getDialPositionInHours() * (60*60) + minutesToAdd * (60) + secondsToAdd * (1);
             break;
         }
         case setMinutes : {
-            servo2.write(getDialPosition() * 3);
+            servo2.write(abs(getDialPosition() * 3) - 180.0);
 
             newTimeCounter = hoursToAdd * (60*60) + getDialPosition() * (60) + secondsToAdd * (1);
             break;
         }
         case setSeconds : {
-            servo1.write(getDialPosition() * 3);
+            servo1.write(abs(getDialPosition() * 3) - 180.0);
 
             newTimeCounter = hoursToAdd * (60*60) + minutesToAdd * (60) + getDialPosition() * (1);
             break;
